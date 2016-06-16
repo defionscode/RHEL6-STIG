@@ -1,37 +1,5 @@
 ---
 # CAT I Findings
-- name: "HIGH | V-38462 | AUDIT | The RPM package management tool must cryptographically verify the authenticity of all software packages during installation"
-  command: grep nosignature /etc/rpmrc /usr/lib/rpm/rpmrc /usr/lib/rpm/redhat/rpmrc ~root/.rpmrc
-  register: rpm_sig_audit
-  always_run: yes
-  changed_when: no
-  failed_when: no
-  tags:
-      - cat1
-      - high
-      - V-38462
-      - audit
-      - rpm
-      - packages
-
-- name: "HIGH | V-38462 | PATCH | The RPM package management tool must cryptographically verify the authenticity of all software packages during installation"
-  lineinfile:
-      state: absent
-      dest: "{{ item }}"
-      regexp: nosignature
-  with_items:
-      - /etc/rpmrc
-      - /usr/lib/rpm/rpmrc
-      - /usr/lib/rpm/redhat/rpmrc
-      - ~root/.rpmrc
-  tags:
-      - cat1
-      - high
-      - V-38462
-      - patch
-      - rpm
-      - packages
-
 - name: "HIGH | V-38476 | AUDIT | Vendor-provided cryptographic certificates must be installed to verify the integrity of system software"
   command: rpm -q gpg-pubkey
   register: rpm_key_audit
@@ -395,8 +363,27 @@
       - patch
       - ctrl_alt_delete
 
-# V-38677 can be found in not_automated.yml
-# HIGH | V-38677 | The NFS server must not have the insecure file locking option enabled.
+- name: "HIGH | V-38677 | AUDIT | The NFS server must not have the insecure file locking option enabled."
+  command: cat /etc/exports
+  register: nfs_exports_audit
+  changed_when: no
+  always_run: yes
+  tags:
+    - cat1
+    - high
+    - V-38668
+    - audit
+    - nfs
+
+- name: "HIGH | V-38677 | PATCH | The NFS server must not have the insecure file locking option enabled."
+  command: "sed -i s/insecure_locks//g /etc/exports"
+  when: '"insecure_locks" in nfs_exports_audit.stdout'
+  tags:
+    - cat1
+    - high
+    - V-38668
+    - audit
+    - nfs
 
 - name: "HIGH | V-38701 | AUDIT | The TFTP daemon must operate in secure mode which provides access only to a single directory on the host file system"
   command: grep "server_args = -s" /etc/xinetd.d/tftp
